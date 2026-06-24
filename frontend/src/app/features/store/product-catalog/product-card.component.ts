@@ -1,4 +1,10 @@
-import { Component, computed, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  output,
+} from '@angular/core';
 import type { Product } from '../../../core/models/product.model';
 import { StockBadgeComponent } from '../../../shared/components/stock-badge.component';
 
@@ -10,6 +16,7 @@ export type ProductIconType = 'sneakers' | 'tee' | 'watch' | 'earbuds' | 'bottle
   imports: [StockBadgeComponent],
   templateUrl: './product-card.component.html',
   styleUrl: './product-card.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductCardComponent {
   readonly product = input.required<Product>();

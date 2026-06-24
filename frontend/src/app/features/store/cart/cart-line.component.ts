@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import type { CartItem } from '../../../core/models/cart-item.model';
 import { CountdownDisplayComponent } from '../../../shared/components/countdown-display.component';
 
@@ -8,6 +8,7 @@ import { CountdownDisplayComponent } from '../../../shared/components/countdown-
   imports: [CountdownDisplayComponent],
   templateUrl: './cart-line.component.html',
   styleUrl: './cart-line.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CartLineComponent {
   readonly item = input.required<CartItem>();

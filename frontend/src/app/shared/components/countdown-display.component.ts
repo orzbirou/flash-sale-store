@@ -1,10 +1,16 @@
-import { Component, computed, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
 
 @Component({
   selector: 'app-countdown-display',
   standalone: true,
   templateUrl: './countdown-display.component.html',
   styleUrl: './countdown-display.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CountdownDisplayComponent {
   readonly remainingMs = input.required<number>();

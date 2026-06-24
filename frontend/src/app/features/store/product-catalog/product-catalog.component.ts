@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { StoreService } from '../../../core/services/store.service';
 import { ProductCardComponent } from './product-card.component';
 
@@ -8,6 +8,7 @@ import { ProductCardComponent } from './product-card.component';
   imports: [ProductCardComponent],
   templateUrl: './product-catalog.component.html',
   styleUrl: './product-catalog.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductCatalogComponent {
   readonly storeService = inject(StoreService);

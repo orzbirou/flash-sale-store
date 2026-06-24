@@ -338,3 +338,26 @@ Payload: `{ productId, stock }`
 - `backend/package.json`
 - `PROMPTS.md` (updated)
 
+---
+
+## Step 6: Frontend ProductCard Signal Reactivity Tests
+
+### Prompt
+
+> Add a clean, functional frontend unit test for `ProductCardComponent` using Angular `TestBed` to verify signal-driven template updates: enabled "Add To Cart" when `stock > 0`, reactive disable + "Sold Out" when `stock` becomes 0.
+
+### What Was Done
+
+- **Spec:** `frontend/src/app/features/store/product-catalog/product-card.component.spec.ts` — uses `componentRef.setInput('product', …)` to drive the `input.required<Product>()` signal, then `detectChanges()` to assert DOM updates.
+- **Assertions:** stock > 0 → button visible, enabled, label `Add To Cart`; stock updated to 0 → button `disabled`, label `Sold Out` (uppercase via `.arcade-btn`).
+- **Test runner fix:** Removed invalid `styles` option from `angular.json` test target; wired `buildTarget: frontend:build:development` so global Tailwind styles load in tests.
+- **Script:** `"test": "ng test --watch=false"` in `frontend/package.json`.
+- **Verified:** `npm test` passes (2 files, 3 tests including existing `app.spec.ts`).
+
+### Files Created / Updated
+
+- `frontend/src/app/features/store/product-catalog/product-card.component.spec.ts`
+- `frontend/angular.json`
+- `frontend/package.json`
+- `PROMPTS.md` (updated)
+

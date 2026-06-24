@@ -68,9 +68,7 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "tsConfig": "tsconfig.spec.json",
-            "styles": [
-              "src/styles.scss"
-            ]
+            "buildTarget": "frontend:build:development"
           }
         }
       }

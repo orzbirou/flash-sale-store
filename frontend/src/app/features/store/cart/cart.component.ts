@@ -1,4 +1,10 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { CartTimerService } from '../../../core/services/cart-timer.service';
 import { StoreService } from '../../../core/services/store.service';
 import { CartLineComponent } from './cart-line.component';
@@ -9,6 +15,7 @@ import { CartLineComponent } from './cart-line.component';
   imports: [CartLineComponent],
   templateUrl: './cart.component.html',
   styleUrl: './cart.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CartComponent {
   readonly storeService = inject(StoreService);

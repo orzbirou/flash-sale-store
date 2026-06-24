@@ -1,4 +1,10 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CartTimerService } from '../../core/services/cart-timer.service';
@@ -13,6 +19,7 @@ import { ProductCatalogComponent } from './product-catalog/product-catalog.compo
   imports: [ProductCatalogComponent, CartComponent],
   templateUrl: './store-shell.component.html',
   styleUrl: './store-shell.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StoreShellComponent implements OnInit, OnDestroy {
   readonly authService = inject(AuthService);
