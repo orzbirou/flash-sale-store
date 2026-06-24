@@ -221,3 +221,58 @@ Prisma 7 requires a driver adapter for SQLite. All `PrismaClient` usage must pas
 - `backend/package-lock.json`
 - `PROMPTS.md` (updated)
 
+---
+
+## Step 3: Backend Logic, Concurrency Services, and WebSockets
+
+### Prompt
+
+> Implement Step 3: layered Express API with atomic CartService, 5-minute CartCleanerService, transactional CheckoutService, Socket.io stock broadcasts, Zod validation, and global error handling.
+
+### What Was Done
+
+- **Schema migration:** Added `CartItem.expiresAt` + `@@index([expiresAt])` for 5-minute cart TTL and cleaner scans.
+- **Infrastructure:** `AppError`, global `errorHandler`, Zod `validateBody`/`validateParams`, `asyncHandler`, `requireUser` (`x-user-id` header).
+- **App bootstrap:** `app.ts` (Express + CORS + `/api` routes), `index.ts` (HTTP server + Socket.io + CartCleaner startup).
+- **Services:**
+  - `CartService` — atomic `addToCart` via `updateMany` + `count === 1` guard; `removeFromCart` restores stock in transaction.
+  - `CheckoutService` — `$transaction` converts cart to `Order`/`OrderItem`, clears cart (no second stock decrement).
+  - `CartCleanerService` — 60s interval; conditional delete on expired items + stock restore; race-safe vs checkout/re-add.
+  - `StockBroadcastService` — emits `stock_updated` after add, remove, and expiry.
+  - `AuthService`, `ProductService` — pseudo-login and catalog listing.
+- **API routes:** `POST /api/auth/login`, `GET /api/products`, `GET/POST/DELETE /api/cart`, `POST /api/orders/checkout`.
+- **Smoke test passed:** login → add to cart (stock 15→14) → checkout (order total 2499 cents).
+
+### Atomic Add-to-Cart Pattern
+
+```typescript
+const decrementResult = await tx.product.updateMany({
+  where: { id: productId, stock: { gte: quantity } },
+  data: { stock: { decrement: quantity } },
+});
+if (decrementResult.count !== 1) throw new AppError(409, '...');
+```
+
+### WebSocket Events
+
+| Event | Trigger |
+|-------|---------|
+| `stock_updated` | Add to cart, remove from cart, cart expiry |
+| (none) | Checkout — stock already reserved |
+
+Payload: `{ productId, stock }`
+
+### Files Created / Updated
+
+- `backend/prisma/schema.prisma` (expiresAt)
+- `backend/prisma/migrations/20260624183649_add_cart_expires_at/`
+- `backend/src/app.ts`, `backend/src/index.ts`
+- `backend/src/lib/app-error.ts`, `socket.ts`, `cart-constants.ts`
+- `backend/src/middlewares/` (error-handler, validate, require-user)
+- `backend/src/validators/` (auth, cart)
+- `backend/src/services/` (auth, product, cart, checkout, cart-cleaner, stock-broadcast)
+- `backend/src/controllers/` (auth, product, cart, order)
+- `backend/src/routes/` (auth, product, cart, order, index)
+- `backend/.env.example` (PORT, CORS_ORIGIN)
+- `PROMPTS.md` (updated)
+
