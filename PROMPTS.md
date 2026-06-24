@@ -361,3 +361,20 @@ Payload: `{ productId, stock }`
 - `frontend/package.json`
 - `PROMPTS.md` (updated)
 
+---
+
+## Step 7: Architecture Documentation (`ARCHITECTURE.md`)
+
+### Prompt
+
+> Generate a comprehensive premium `ARCHITECTURE.md` covering monorepo layout, concurrency protection, real-time inventory, cart TTL lifecycle, automated testing proof, and production scalability horizon.
+
+### What Was Done
+
+- **Created** root `ARCHITECTURE.md` with six sections mapping 1:1 to the completed implementation: Express/Angular monorepo, Prisma 7 + SQLite native adapter, atomic `updateMany` stock guards, Socket.io `stock_updated`, cart lease cleaner + `CartTimerService`, Jest concurrency + Angular signal unit tests, and Redis/debounce scalability notes.
+
+### Files Created / Updated
+
+- `ARCHITECTURE.md`
+- `PROMPTS.md` (updated)
+
