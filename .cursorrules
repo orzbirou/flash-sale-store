@@ -1,0 +1,141 @@
+# Flash-Sale Store — Global Architecture & Agent Rules
+
+These rules are mandatory for all code generation, refactoring, and reviews in this repository.
+Do not deviate without explicit user approval.
+
+---
+
+## Global Standards
+
+- **TypeScript strict mode**: Every `tsconfig.json` MUST set `"strict": true`. No exceptions.
+- **No `any`**: Never use `any`. Use `unknown`, generics, or explicit union/intersection types. Use type guards when narrowing `unknown`.
+- **Production-grade quality**: Prefer explicit error handling, typed APIs, and maintainable structure over shortcuts—even under deadline pressure.
+- **Naming**: Use clear, domain-driven names. Avoid abbreviations unless universally understood (e.g., `id`, `dto`).
+- **Scope discipline**: Make the smallest correct change. Do not add unrelated features, abstractions, or files.
+
+---
+
+## Frontend — Angular
+
+### Dependency Injection
+- Use the **functional `inject()` pattern only**.
+- **Do NOT** use constructor-based DI (`constructor(private foo: Foo)`).
+- Provide services with `providedIn: 'root'` unless a scoped provider is explicitly required.
+
+### State Management
+- Use **Angular Signals** as the primary state mechanism (`signal`, `computed`, `effect` where appropriate).
+- Keep component state lightweight and local; lift to services only when shared across features.
+- Avoid NgRx, Akita, or other heavy state libraries unless explicitly requested.
+
+### RxJS Integration
+- Bridge Observables to the template with **`toSignal()`** from `@angular/core/rxjs-interop`.
+- Prefer `toSignal()` over manual `subscribe()` in components.
+- When `subscribe()` is unavoidable (side effects, one-off imperatives), unsubscribe via `takeUntilDestroyed()` or convert to a signal.
+
+### Styling
+- Use **Tailwind CSS** for layout, spacing, typography, and responsive design.
+- Avoid inline styles and component-scoped CSS unless Tailwind cannot express the requirement.
+- Keep class lists readable; group related utilities logically.
+
+### Structure
+- Feature-based folder organization under `frontend/src/app/`.
+- Smart/dumb component split: container components handle data; presentational components receive `@Input()` / signals and emit events.
+- Use standalone components by default.
+
+---
+
+## Backend — Express + TypeScript
+
+### Layered Architecture (strict)
+Request flow MUST follow:
+
+```
+Routes → Controllers → Services → Prisma (data access)
+```
+
+| Layer       | Responsibility                                              |
+|-------------|-------------------------------------------------------------|
+| **Routes**  | HTTP method + path mapping only. Wire middleware. No logic. |
+| **Controllers** | Parse request, call service, map response status/body. Thin. |
+| **Services** | Business logic, transactions, validation orchestration.   |
+| **Prisma**  | Data access only. No HTTP or business rules in queries.     |
+
+- Controllers MUST NOT call Prisma directly.
+- Routes MUST NOT contain business logic.
+- Services MUST NOT access `req` / `res` objects.
+
+### Error Handling
+- Implement a **global error-handling middleware** as the last Express middleware.
+- Use a typed/custom `AppError` (or equivalent) with `statusCode` and `message`.
+- Never leak stack traces or internal details in production responses.
+- Async route handlers MUST forward errors via `next(err)` or an async wrapper.
+
+### Input Validation
+- Validate **all** incoming request data (body, params, query) before it reaches services.
+- Use a schema-based validator (e.g., Zod) at the controller or route boundary.
+- Return `400 Bad Request` with clear, field-level error messages on validation failure.
+
+### API Conventions
+- RESTful resource naming (`/api/products`, `/api/orders`).
+- Consistent JSON response envelope where applicable: `{ data, error, meta }`.
+- Use appropriate HTTP status codes (201 for create, 404 for not found, 409 for conflicts).
+
+---
+
+## Database — Prisma + SQLite
+
+### Race-Condition Protection (Flash-Sale Critical)
+- **Atomic stock decrements**: Always use conditional updates:
+  ```sql
+  UPDATE ... SET stock = stock - 1 WHERE id = ? AND stock > 0
+  ```
+  In Prisma: `updateMany` with `where: { id, stock: { gt: 0 } }` and check `count === 1`.
+- Never read stock, compute in application memory, then write back without a conditional guard.
+- On failed decrement (`count === 0`), return `409 Conflict` — item sold out or race lost.
+
+### Transactions
+- Wrap **multi-step writes** in `prisma.$transaction()` (e.g., decrement stock + create order).
+- Use interactive transactions when later steps depend on earlier results within the same unit of work.
+- Keep transactions short; no external API calls inside a transaction.
+
+### Indexing
+- Define **explicit indexes** in the Prisma schema for:
+  - Foreign keys
+  - Columns used in `WHERE`, `ORDER BY`, or join conditions
+  - High-frequency lookup fields (e.g., `productId`, `userId`, `status`)
+- Document index rationale in schema comments when non-obvious.
+
+### Migrations
+- Use Prisma Migrate for all schema changes.
+- Never hand-edit the SQLite database in production workflows.
+
+---
+
+## Documentation — PROMPTS.md
+
+- At the **end of each major task**, append a new step section to `PROMPTS.md`.
+- Each step MUST include:
+  1. A descriptive heading (e.g., `# Step N: <Task Name>`)
+  2. The user prompt (or paraphrased intent) that initiated the work
+  3. A brief summary of what was done and key decisions made
+- Do not skip documentation steps. They are part of the definition of done.
+
+---
+
+## Testing & Quality (when requested)
+
+- Backend: integration tests for critical paths (purchase flow, stock decrement).
+- Frontend: component tests for purchase UI and error states.
+- Do not add trivial tests that only assert mocks or framework behavior.
+
+---
+
+## Forbidden Patterns
+
+| Area     | Forbidden                                              |
+|----------|--------------------------------------------------------|
+| TS       | `any`, `@ts-ignore` without justification              |
+| Angular  | Constructor DI, manual `subscribe()` without cleanup   |
+| Express  | Business logic in routes, Prisma calls in controllers  |
+| Prisma   | Read-modify-write stock updates without atomic guard   |
+| General  | Committing secrets (`.env`, credentials)               |
