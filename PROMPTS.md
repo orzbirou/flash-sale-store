@@ -150,3 +150,74 @@ Monorepo scaffolding with root `concurrently` scripts enables single-command loc
 - `backend/src/index.ts` (placeholder)
 - `package.json` (root, with orchestration scripts)
 - `PROMPTS.md` (updated)
+
+---
+
+## Step 2: Database Design and Schema Configuration
+
+### Prompt
+
+> Implement Step 2: Prisma + SQLite schema (User, Product, CartItem, Order, OrderItem), indexes for flash-sale concurrency, seed script with 5 products, run migration and seed, document in PROMPTS.md.
+
+### What Was Done
+
+- Created **`backend/prisma/schema.prisma`** with five models (`User`, `Product`, `CartItem`, `Order`, `OrderItem`), `OrderStatus` enum, and explicit indexes for flash-sale hot paths (cart by `userId`, product browse by `name`, unique `userId+productId` on cart lines).
+- Created **`backend/prisma.config.ts`** (Prisma 7 config with datasource URL and seed command).
+- Created **`backend/.env.example`**; kept **`backend/.env`** (`DATABASE_URL="file:./prisma/dev.db"`).
+- Created **`backend/prisma/seed.ts`** — idempotent seed of 5 limited-stock products.
+- Created **`backend/prisma/tsconfig.json`** for seed TypeScript compilation.
+- Added **`backend/src/lib/prisma.ts`** — shared Prisma client with `@prisma/adapter-better-sqlite3` (required in Prisma 7).
+- Updated **`backend/package.json`** with `db:migrate`, `db:seed`, `db:reset` scripts.
+- Installed: `ts-node`, `dotenv`, `@prisma/adapter-better-sqlite3`, `better-sqlite3`, `@types/better-sqlite3`.
+- Ran `prisma migrate dev --name init` and `prisma db seed` successfully.
+
+### Design: Reservation-on-Cart Inventory
+
+Stock decrements when items are **added to cart** (REQUIREMENTS.md #3), not at checkout:
+
+- `Product.stock` = live remaining count (Socket.io broadcast in Step 3).
+- Add to cart: atomic `updateMany` with `stock >= quantity`, then upsert `CartItem`.
+- Checkout: snapshot `Order` + `OrderItem`, clear cart — no second stock decrement.
+- Remove from cart: delete `CartItem`, increment `Product.stock`.
+
+### Seed Products
+
+| Product | Stock | Price |
+|---------|-------|-------|
+| Limited Edition Sneakers | 10 | $129.99 |
+| Vintage Graphic Tee | 25 | $34.99 |
+| Smart Watch Band | 50 | $19.99 |
+| Wireless Earbuds | 5 | $79.99 |
+| Insulated Water Bottle | 15 | $24.99 |
+
+### Index Rationale
+
+| Index | Purpose |
+|-------|---------|
+| `Product @@index([name])` | Browse listing |
+| `CartItem @@unique([userId, productId])` | Safe upsert on add-to-cart |
+| `CartItem @@index([userId])` | Hot path: load user's cart |
+| `CartItem @@index([productId])` | Reverse lookup per product |
+| `User @@index([name])` | Pseudo-login find-or-create |
+| `Order @@index([userId])`, `@@index([status])`, `@@index([createdAt])` | Order history and filtering |
+| `OrderItem @@index([orderId])`, `@@index([productId])` | Order line items |
+
+No standalone `stock` index — atomic updates always filter by `id` first.
+
+### Prisma 7 Note
+
+Prisma 7 requires a driver adapter for SQLite. All `PrismaClient` usage must pass `{ adapter: new PrismaBetterSqlite3({ url }) }` — bare `new PrismaClient()` throws at runtime.
+
+### Files Created / Updated
+
+- `backend/prisma/schema.prisma`
+- `backend/prisma/migrations/20260624144852_init/migration.sql`
+- `backend/prisma/seed.ts`
+- `backend/prisma/tsconfig.json`
+- `backend/prisma.config.ts`
+- `backend/.env.example`
+- `backend/src/lib/prisma.ts`
+- `backend/package.json`
+- `backend/package-lock.json`
+- `PROMPTS.md` (updated)
+
