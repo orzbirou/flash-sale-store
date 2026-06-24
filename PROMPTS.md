@@ -276,3 +276,35 @@ Payload: `{ productId, stock }`
 - `backend/.env.example` (PORT, CORS_ORIGIN)
 - `PROMPTS.md` (updated)
 
+---
+
+## Step 4: Frontend Development (Angular + Tailwind CSS)
+
+### Prompt
+
+> Blueprint and implement the Angular + Tailwind frontend: retro-minimalist Baba Entertainment aesthetic, signal-based services, Socket.io live stock sync, anti-flicker product grid, server-synced cart countdown timers.
+
+### What Was Done
+
+- **Setup:** Tailwind CSS v4 (`@tailwindcss/postcss`), `socket.io-client`, IBM Plex fonts, `environment.ts`, `provideHttpClient()`.
+- **Aesthetic:** Flat `arcade-panel` / `arcade-btn` utilities — 2px borders, uppercase labels, `font-mono tabular-nums` for stock/prices/timers. No gradients or neon glows.
+- **Services (signals + `inject()`):**
+  - `AuthService` — pseudo-login, `sessionStorage` persistence
+  - `StoreService` — products, cart, checkout HTTP; `patchProductStock` for socket deltas
+  - `SocketService` — `stock_updated` listener; connect/disconnect lifecycle
+  - `CartTimerService` — single `setInterval` via `effect`; countdown from server `expiresAt`
+- **Components:** `LoginComponent`, `StoreShellComponent`, `ProductCatalog` + `ProductCard`, `Cart` + `CartLine`, `StockBadge`, `CountdownDisplay`
+- **Anti-flicker:** Fixed-width `stock-badge` (`min-w-[4.5rem]`, `tabular-nums`); in-place stock patches with `@for (track product.id)`
+- **Routes:** `/login`, `/store` with `authGuard` / `guestGuard`
+- **Build verified:** `ng build` succeeds
+
+### Files Created / Updated
+
+- `frontend/.postcssrc.json`, `frontend/src/styles.css`, `frontend/src/environments/environment.ts`
+- `frontend/src/app/core/` (models, services, guards)
+- `frontend/src/app/features/login/`, `frontend/src/app/features/store/`
+- `frontend/src/app/shared/components/`
+- `frontend/src/app/app.ts`, `app.routes.ts`, `app.config.ts`
+- `frontend/package.json`, `frontend/src/index.html`
+- `PROMPTS.md` (updated)
+

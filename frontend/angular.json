@@ -25,7 +25,7 @@
               }
             ],
             "styles": [
-              "src/styles.css"
+              "src/styles.scss"
             ]
           },
           "configurations": {
@@ -65,7 +65,13 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "tsconfig.spec.json",
+            "styles": [
+              "src/styles.scss"
+            ]
+          }
         }
       }
     }

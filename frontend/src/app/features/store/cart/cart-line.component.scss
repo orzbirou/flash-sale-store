@@ -1,0 +1,31 @@
+:host {
+  display: block;
+}
+
+.cart-line {
+  @apply border-b border-zinc-300 py-3 last:border-b-0;
+}
+
+.cart-line-header {
+  @apply flex items-start justify-between gap-2;
+}
+
+.cart-line-info {
+  @apply min-w-0 flex-1;
+}
+
+.cart-line-name {
+  @apply truncate text-sm font-bold uppercase text-zinc-900;
+}
+
+.cart-line-price {
+  @apply mt-1 text-sm text-orange-600;
+}
+
+.cart-line-remove {
+  @apply shrink-0 text-xs font-bold uppercase tracking-widest text-rose-700 hover:underline;
+}
+
+.cart-line-timer {
+  @apply mt-2 flex items-center gap-2;
+}

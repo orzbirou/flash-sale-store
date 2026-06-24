@@ -1,0 +1,39 @@
+:host {
+  display: block;
+}
+
+.login-page {
+  @apply flex min-h-screen items-center justify-center bg-amber-50/30 p-4;
+}
+
+.login-panel {
+  @apply w-full max-w-md p-8;
+}
+
+.login-brand {
+  @apply mb-1 text-orange-600;
+}
+
+.login-status {
+  @apply mb-6 font-mono text-xs uppercase tracking-widest text-indigo-600;
+}
+
+.login-title {
+  @apply mb-6 text-2xl font-bold uppercase tracking-wider text-zinc-900;
+}
+
+.login-form {
+  @apply flex flex-col gap-4;
+}
+
+.login-input {
+  @apply border-2 border-zinc-800 bg-white px-3 py-2 font-mono uppercase text-zinc-900 outline-none focus:border-indigo-600 focus:bg-amber-50/40;
+}
+
+.login-error {
+  @apply font-mono text-sm text-rose-700;
+}
+
+.login-submit {
+  @apply mt-2;
+}

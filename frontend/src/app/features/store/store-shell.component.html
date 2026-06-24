@@ -1,0 +1,37 @@
+<div class="store-shell">
+  <header class="store-header">
+    <div class="store-header-inner">
+      <div>
+        <p class="arcade-label store-kicker">Flash Sale // Live Stores</p>
+        <h1 class="store-title">System Status: Operational</h1>
+      </div>
+
+      <div class="store-header-actions">
+        @if (authService.user(); as user) {
+          <span class="arcade-data store-player">Player: {{ user.name }}</span>
+        }
+        @if (socketService.connected()) {
+          <span class="arcade-label store-live">Live Feed Active</span>
+        }
+        <button type="button" class="arcade-btn arcade-btn--ghost store-logout" (click)="onLogout()">
+          Log Out
+        </button>
+      </div>
+    </div>
+  </header>
+
+  @if (storeService.error()) {
+    <div class="store-error-banner">
+      <p class="store-error-text">{{ storeService.error() }}</p>
+    </div>
+  }
+
+  <main class="store-main">
+    <div class="store-catalog">
+      <app-product-catalog />
+    </div>
+    <div class="store-cart">
+      <app-cart />
+    </div>
+  </main>
+</div>

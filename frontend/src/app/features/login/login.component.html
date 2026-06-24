@@ -1,0 +1,30 @@
+<div class="login-page">
+  <div class="arcade-panel login-panel">
+    <p class="arcade-label login-brand">Flash Sale // Live Stores</p>
+    <p class="login-status">System Status: Operational</p>
+    <h1 class="login-title">Enter Player Name</h1>
+
+    <form (ngSubmit)="onSubmit()" class="login-form">
+      <label class="arcade-label" for="player-name">Player Name</label>
+      <input
+        id="player-name"
+        type="text"
+        class="login-input"
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+        name="name"
+        maxlength="50"
+        autocomplete="username"
+        [disabled]="loading()"
+      />
+
+      @if (error()) {
+        <p class="login-error">{{ error() }}</p>
+      }
+
+      <button type="submit" class="arcade-btn login-submit" [disabled]="loading() || !name().trim()">
+        {{ loading() ? 'STARTING...' : 'START' }}
+      </button>
+    </form>
+  </div>
+</div>

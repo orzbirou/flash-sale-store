@@ -1,0 +1,15 @@
+:host {
+  display: inline-block;
+}
+
+.countdown {
+  @apply text-sm;
+}
+
+.countdown--normal {
+  @apply text-orange-600;
+}
+
+.countdown--urgent {
+  @apply text-rose-700;
+}

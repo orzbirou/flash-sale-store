@@ -1,0 +1,10 @@
+<div class="stock-badge-wrap">
+  <span class="arcade-label">STK</span>
+  <span
+    class="stock-badge"
+    [class.stock-badge--low]="stock() > 0 && stock() <= 5"
+    [class.stock-badge--sold-out]="stock() === 0"
+  >
+    {{ stock() }}
+  </span>
+</div>

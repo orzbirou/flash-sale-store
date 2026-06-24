@@ -1,0 +1,83 @@
+<article class="product-card arcade-panel">
+  @if (product().stock > 0 && product().stock <= 5) {
+    <span class="product-card-low-stock">Low Stock</span>
+  }
+
+  <div class="product-card-art" [attr.data-icon]="iconType()">
+    @switch (iconType()) {
+      @case ('sneakers') {
+        <svg class="product-card-svg" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="8" y="34" width="48" height="14" fill="#fbbf24" stroke="#27272a" stroke-width="2"/>
+          <rect x="14" y="28" width="36" height="8" fill="#fde68a" stroke="#27272a" stroke-width="2"/>
+          <rect x="20" y="22" width="24" height="6" fill="#fff" stroke="#27272a" stroke-width="2"/>
+          <rect x="10" y="40" width="8" height="4" fill="#27272a"/>
+          <rect x="22" y="40" width="8" height="4" fill="#27272a"/>
+          <rect x="34" y="40" width="8" height="4" fill="#27272a"/>
+          <rect x="46" y="40" width="8" height="4" fill="#27272a"/>
+        </svg>
+      }
+      @case ('tee') {
+        <svg class="product-card-svg" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M20 18 L12 24 L16 30 L22 26 L22 48 L42 48 L42 26 L48 30 L52 24 L44 18 L36 22 L28 22 Z" fill="#fca5a5" stroke="#27272a" stroke-width="2"/>
+          <rect x="26" y="30" width="12" height="10" fill="#fff" stroke="#27272a" stroke-width="1.5"/>
+        </svg>
+      }
+      @case ('watch') {
+        <svg class="product-card-svg" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="24" y="10" width="16" height="8" fill="#a1a1aa" stroke="#27272a" stroke-width="2"/>
+          <rect x="24" y="46" width="16" height="8" fill="#a1a1aa" stroke="#27272a" stroke-width="2"/>
+          <rect x="18" y="18" width="28" height="28" rx="4" fill="#fef3c7" stroke="#27272a" stroke-width="2"/>
+          <circle cx="32" cy="32" r="10" fill="#fff" stroke="#27272a" stroke-width="2"/>
+          <line x1="32" y1="32" x2="32" y2="24" stroke="#27272a" stroke-width="2"/>
+          <line x1="32" y1="32" x2="38" y2="32" stroke="#27272a" stroke-width="2"/>
+        </svg>
+      }
+      @case ('earbuds') {
+        <svg class="product-card-svg" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M18 30 C18 18 26 12 32 12 C38 12 46 18 46 30" fill="none" stroke="#27272a" stroke-width="2"/>
+          <rect x="12" y="30" width="10" height="18" rx="4" fill="#c4b5fd" stroke="#27272a" stroke-width="2"/>
+          <rect x="42" y="30" width="10" height="18" rx="4" fill="#c4b5fd" stroke="#27272a" stroke-width="2"/>
+          <rect x="28" y="8" width="8" height="6" fill="#27272a"/>
+        </svg>
+      }
+      @case ('bottle') {
+        <svg class="product-card-svg" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="26" y="10" width="12" height="8" fill="#a1a1aa" stroke="#27272a" stroke-width="2"/>
+          <rect x="22" y="18" width="20" height="34" rx="3" fill="#93c5fd" stroke="#27272a" stroke-width="2"/>
+          <rect x="24" y="24" width="16" height="6" fill="#fff" stroke="#27272a" stroke-width="1.5"/>
+        </svg>
+      }
+      @default {
+        <svg class="product-card-svg" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="12" y="12" width="40" height="40" fill="#fde68a" stroke="#27272a" stroke-width="2"/>
+          <rect x="20" y="20" width="24" height="24" fill="#fff" stroke="#27272a" stroke-width="2"/>
+        </svg>
+      }
+    }
+  </div>
+
+  <h3 class="product-card-name">{{ product().name }}</h3>
+  <p class="product-card-description">{{ product().description }}</p>
+
+  <div class="product-card-body">
+    <div class="product-card-meta">
+      <span class="arcade-data product-card-price">
+        {{ formatPrice(product().priceCents) }}
+      </span>
+      <app-stock-badge [stock]="product().stock" />
+    </div>
+
+    @if (errorMessage()) {
+      <p class="product-card-error">{{ errorMessage() }}</p>
+    }
+  </div>
+
+  <button
+    type="button"
+    class="arcade-btn product-card-action"
+    [disabled]="product().stock === 0 || isAdding()"
+    (click)="addToCart.emit(product().id)"
+  >
+    {{ product().stock === 0 ? 'Sold Out' : isAdding() ? 'Adding...' : 'Add To Cart' }}
+  </button>
+</article>

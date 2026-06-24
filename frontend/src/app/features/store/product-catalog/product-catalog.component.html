@@ -1,0 +1,18 @@
+<section class="catalog">
+  <h2 class="arcade-label catalog-title">Available Drops</h2>
+
+  @if (storeService.loading()) {
+    <p class="arcade-data catalog-loading">Loading catalog...</p>
+  } @else {
+    <div class="catalog-grid">
+      @for (product of storeService.products(); track product.id) {
+        <app-product-card
+          [product]="product"
+          [isAdding]="addingProductId() === product.id"
+          [errorMessage]="storeService.productErrors()[product.id] || null"
+          (addToCart)="onAddToCart($event)"
+        />
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,50 @@
+<aside class="cart arcade-panel">
+  <h2 class="arcade-label cart-title">Your Cart</h2>
+
+  @if (storeService.lastOrder(); as order) {
+    <div class="cart-success">
+      <p class="cart-success-heading">Order Confirmed</p>
+      <p class="arcade-data cart-success-id">ID: {{ order.id }}</p>
+      <p class="arcade-data cart-success-total">
+        Total: {{ formatPrice(order.totalCents) }}
+      </p>
+      <button type="button" class="arcade-btn cart-success-action" (click)="storeService.clearLastOrder()">
+        Continue Shopping
+      </button>
+    </div>
+  } @else if (storeService.isCartEmpty()) {
+    <p class="arcade-data cart-empty">Cart is empty.</p>
+  } @else {
+    <div class="cart-lines">
+      @for (item of storeService.cartItems(); track item.id) {
+        <app-cart-line
+          [item]="item"
+          [remainingMs]="cartTimer.remainingByItemId().get(item.id) ?? 0"
+          (remove)="onRemove($event)"
+        />
+      }
+    </div>
+
+    <div class="cart-footer">
+      <div class="cart-total-row">
+        <span class="arcade-label">Total</span>
+        <span class="arcade-data cart-total">
+          {{ formatPrice(storeService.cartTotalCents()) }}
+        </span>
+      </div>
+
+      @if (storeService.error()) {
+        <p class="cart-error">{{ storeService.error() }}</p>
+      }
+
+      <button
+        type="button"
+        class="arcade-btn cart-checkout"
+        [disabled]="checkingOut()"
+        (click)="onCheckout()"
+      >
+        {{ checkingOut() ? 'Processing...' : 'Checkout' }}
+      </button>
+    </div>
+  }
+</aside>

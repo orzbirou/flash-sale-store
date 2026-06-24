@@ -1,0 +1,11 @@
+<span
+  class="countdown arcade-data"
+  [class.countdown--normal]="!isExpired() && !isUrgent()"
+  [class.countdown--urgent]="isUrgent() || isExpired()"
+>
+  @if (isExpired()) {
+    EXPIRED
+  } @else {
+    {{ formatted() }}
+  }
+</span>

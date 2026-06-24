@@ -1,0 +1,15 @@
+:host {
+  display: inline-block;
+}
+
+.stock-badge-wrap {
+  @apply flex items-center gap-2;
+}
+
+.stock-badge--low {
+  @apply border-rose-300 bg-rose-50 text-rose-700;
+}
+
+.stock-badge--sold-out {
+  @apply border-zinc-400 bg-zinc-100 text-zinc-500;
+}

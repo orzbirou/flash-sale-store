@@ -1,0 +1,47 @@
+:host {
+  display: block;
+}
+
+.product-card {
+  @apply relative flex min-h-[320px] flex-col overflow-hidden p-0;
+}
+
+.product-card-low-stock {
+  @apply absolute right-2 top-2 z-10 border border-rose-300 bg-rose-50 px-2 py-0.5 font-sans text-[10px] font-bold uppercase tracking-widest text-rose-700;
+}
+
+.product-card-art {
+  @apply flex h-36 shrink-0 items-center justify-center border-b-2 border-zinc-800 bg-amber-50/50;
+}
+
+.product-card-svg {
+  @apply h-24 w-24;
+}
+
+.product-card-name {
+  @apply line-clamp-2 px-4 pt-4 text-sm font-bold uppercase leading-tight text-zinc-900;
+}
+
+.product-card-description {
+  @apply line-clamp-2 h-10 px-4 text-sm text-zinc-600;
+}
+
+.product-card-body {
+  @apply flex flex-1 flex-col gap-4 px-4 pb-2 pt-3;
+}
+
+.product-card-meta {
+  @apply mb-4 flex items-end justify-between;
+}
+
+.product-card-price {
+  @apply text-lg font-bold text-orange-600;
+}
+
+.product-card-error {
+  @apply font-mono text-xs text-rose-700;
+}
+
+.product-card-action {
+  @apply mx-4 mb-4 mt-auto w-[calc(100%-2rem)];
+}
