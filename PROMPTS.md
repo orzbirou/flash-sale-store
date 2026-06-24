@@ -308,3 +308,33 @@ Payload: `{ productId, stock }`
 - `frontend/package.json`, `frontend/src/index.html`
 - `PROMPTS.md` (updated)
 
+---
+
+## Step 5: Backend Concurrency Integration Tests
+
+### Prompt
+
+> Add real, functional automated tests to the backend to scientifically prove race-condition and concurrency protection: Jest + supertest, seed product with stock=1, 10 parallel add-to-cart requests, assert 1 success and 9×409, final stock=0.
+
+### What Was Done
+
+- **Dependencies:** `jest`, `@types/jest`, `ts-jest`, `supertest`, `@types/supertest` in `backend/`.
+- **Jest config:** `backend/jest.config.ts` — `ts-jest` preset, isolated test DB via `src/tests/setup.ts` (`file:./prisma/test-concurrency.db`).
+- **Integration test:** `backend/src/tests/concurrency.test.ts` — migrates test DB, seeds 1-unit product + 10 users, fires `Promise.all` of 10 `POST /api/cart/items` with distinct `x-user-id` headers; asserts exactly 1×200, 9×409 with stock error message, `Product.stock === 0`, and a single cart reservation.
+- **Script:** `"test": "jest --runInBand"` in `backend/package.json`.
+- **Verified:** `npm test` passes locally (1 suite, 1 test).
+
+### Key Decisions
+
+- Uses `createApp()` + supertest (no HTTP server bind) to avoid port conflicts.
+- Test endpoint is `POST /api/cart/items` (actual cart route; not `/api/cart/add`).
+- `setup.ts` sets `DATABASE_URL` before Prisma loads so tests never touch `dev.db`.
+
+### Files Created / Updated
+
+- `backend/jest.config.ts`
+- `backend/src/tests/setup.ts`
+- `backend/src/tests/concurrency.test.ts`
+- `backend/package.json`
+- `PROMPTS.md` (updated)
+
