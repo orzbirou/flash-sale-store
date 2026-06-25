@@ -90,30 +90,16 @@ The root `dev` script uses `concurrently` to run both servers. Open the frontend
 
 ## Testing
 
-### Backend (Jest integration tests)
+From the repository root, run the unified test suite (backend Jest integration tests, then frontend Vitest unit tests):
 
 ```bash
-cd backend
 npm test
 ```
 
-Includes the concurrency integration test that fires 10 parallel add-to-cart requests against a single-stock product.
+This executes:
 
-### Frontend (Vitest unit tests)
-
-```bash
-cd frontend
-npm test
-```
-
-Includes `ProductCardComponent` signal reactivity tests under `ChangeDetectionStrategy.OnPush`.
-
-### Run both
-
-```bash
-npm test --prefix backend
-npm test --prefix frontend
-```
+- **Backend** — concurrency integration test (10 parallel add-to-cart requests against a single-stock product) and full purchase-flow integration test (browse → add to cart → checkout)
+- **Frontend** — `ProductCardComponent` signal reactivity tests under `ChangeDetectionStrategy.OnPush`
 
 ## Production Build
 
