@@ -8,21 +8,21 @@ export class CheckoutService {
       const now = new Date();
 
       const cartItems = await tx.cartItem.findMany({
-        where: {
-          userId,
-          expiresAt: { gt: now },
-        },
+        where: { userId },
         include: { product: true },
       });
 
       if (cartItems.length === 0) {
-        const staleCount = await tx.cartItem.count({ where: { userId } });
-
-        if (staleCount > 0) {
-          throw new AppError(410, 'Cart reservation has expired.');
-        }
-
         throw new AppError(400, 'Cart is empty');
+      }
+
+      const hasExpiredItem = cartItems.some((item) => item.expiresAt <= now);
+
+      if (hasExpiredItem) {
+        throw new AppError(
+          410,
+          'Your cart contains expired items. Please refresh your cart before checking out.',
+        );
       }
 
       const totalCents = cartItems.reduce(
