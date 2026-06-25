@@ -5,9 +5,9 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CartTimerService } from '../../../core/services/cart-timer.service';
-import { StoreService } from '../../../core/services/store.service';
-import { CartLineComponent } from './cart-line.component';
+import { CartTimerService } from '../../../../core/services/cart-timer.service';
+import { StoreService } from '../../../../core/services/store.service';
+import { CartLineComponent } from '../cart-line/cart-line.component';
 
 @Component({
   selector: 'app-cart',

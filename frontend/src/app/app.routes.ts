@@ -5,13 +5,15 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./features/login/login.component').then((m) => m.LoginComponent),
+      import('./features/login/login/login.component').then((m) => m.LoginComponent),
     canActivate: [guestGuard],
   },
   {
     path: 'store',
     loadComponent: () =>
-      import('./features/store/store-shell.component').then((m) => m.StoreShellComponent),
+      import('./features/store/store-shell/store-shell.component').then(
+        (m) => m.StoreShellComponent,
+      ),
     canActivate: [authGuard],
   },
   { path: '', redirectTo: 'store', pathMatch: 'full' },

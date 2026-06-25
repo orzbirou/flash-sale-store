@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import type { Product } from '../../../core/models/product.model';
+import type { Product } from '../../../../core/models/product.model';
 import { ProductCardComponent } from './product-card.component';
 
 function createProduct(overrides: Partial<Product> = {}): Product {
@@ -43,6 +43,7 @@ describe('ProductCardComponent', () => {
 
     expect(button.disabled).toBe(false);
     expect(button.textContent?.trim()).toBe('Add To Cart');
+    expect(button.classList.contains('arcade-btn')).toBe(true);
   });
 
   it('reactively disables the button and shows Sold Out when stock drops to zero', () => {

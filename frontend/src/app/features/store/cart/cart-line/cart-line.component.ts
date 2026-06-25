@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import type { CartItem } from '../../../core/models/cart-item.model';
-import { CountdownDisplayComponent } from '../../../shared/components/countdown-display.component';
+import type { CartItem } from '../../../../core/models/cart-item.model';
+import { CountdownDisplayComponent } from '../../../../shared/components/countdown-display/countdown-display.component';
 
 @Component({
   selector: 'app-cart-line',

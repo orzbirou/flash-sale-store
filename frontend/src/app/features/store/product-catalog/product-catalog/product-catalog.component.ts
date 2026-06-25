@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { StoreService } from '../../../core/services/store.service';
-import { ProductCardComponent } from './product-card.component';
+import { StoreService } from '../../../../core/services/store.service';
+import { ProductCardComponent } from '../product-card/product-card.component';
 
 @Component({
   selector: 'app-product-catalog',

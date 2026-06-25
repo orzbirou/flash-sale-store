@@ -6,12 +6,12 @@ import {
   OnInit,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
-import { CartTimerService } from '../../core/services/cart-timer.service';
-import { SocketService } from '../../core/services/socket.service';
-import { StoreService } from '../../core/services/store.service';
-import { CartComponent } from './cart/cart.component';
-import { ProductCatalogComponent } from './product-catalog/product-catalog.component';
+import { AuthService } from '../../../core/services/auth.service';
+import { CartTimerService } from '../../../core/services/cart-timer.service';
+import { SocketService } from '../../../core/services/socket.service';
+import { StoreService } from '../../../core/services/store.service';
+import { CartComponent } from '../cart/cart/cart.component';
+import { ProductCatalogComponent } from '../product-catalog/product-catalog/product-catalog.component';
 
 @Component({
   selector: 'app-store-shell',

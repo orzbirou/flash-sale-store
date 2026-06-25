@@ -5,8 +5,8 @@ import {
   input,
   output,
 } from '@angular/core';
-import type { Product } from '../../../core/models/product.model';
-import { StockBadgeComponent } from '../../../shared/components/stock-badge.component';
+import type { Product } from '../../../../core/models/product.model';
+import { StockBadgeComponent } from '../../../../shared/components/stock-badge/stock-badge.component';
 
 export type ProductIconType = 'sneakers' | 'tee' | 'watch' | 'earbuds' | 'bottle' | 'default';
 
