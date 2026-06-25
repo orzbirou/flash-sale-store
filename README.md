@@ -124,6 +124,7 @@ Authenticated cart and checkout routes require the `x-user-id` header returned f
 
 - [`ARCHITECTURE.md`](./ARCHITECTURE.md) — system design, concurrency model, and scalability notes
 - [`REQUIREMENTS.md`](./REQUIREMENTS.md) — functional requirements
+- [`PROMPTS.md`](./PROMPTS.md) — Development log tracking AI specifications and architectural updates.
 - [`.cursorrules`](./.cursorrules) — coding standards for contributors and agents
 
 ## License
