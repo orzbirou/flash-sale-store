@@ -1,43 +1,144 @@
 # Flash-Sale Store
 
-A high-concurrency flash-sale e-commerce application built for limited-time product drops with strict inventory control.
-
-## Overview
-
-This project implements a full-stack flash-sale store where customers compete for limited stock during time-bound sales events. The architecture prioritizes correctness under concurrent load—preventing overselling—while remaining fast to develop and deploy.
+A full-stack flash-sale store for limited-inventory product drops. The system reserves stock at add-to-cart time, broadcasts live counts over WebSockets, and enforces atomic inventory guards under concurrent load.
 
 ## Tech Stack
 
-| Layer    | Technology                          |
-|----------|-------------------------------------|
-| Backend  | Node.js, Express, TypeScript        |
-| Frontend | Angular, TypeScript, Tailwind CSS   |
-| Database | Prisma ORM, SQLite                  |
+| Layer    | Technology |
+|----------|------------|
+| Backend  | Node.js, Express 5, TypeScript, Prisma 7, Socket.io |
+| Frontend | Angular 21 (standalone), Signals, Tailwind CSS v3 |
+| Database | SQLite via `@prisma/adapter-better-sqlite3` |
 
-## Architecture Highlights
+## Prerequisites
 
-- **Backend**: Layered Express API (Routes → Controllers → Services) with global error handling and input validation.
-- **Frontend**: Angular with functional `inject()` DI, Signals for state, and RxJS bridged via `toSignal()`.
-- **Database**: Atomic stock decrements and transactional order creation to handle race conditions safely.
+- **Node.js** `>= 20.x` (LTS recommended; tested on Node 20 and 22)
+- **npm** `>= 10.x`
 
 ## Project Structure
 
 ```
 flash-sale-store/
-├── backend/          # Express API (coming soon)
-├── frontend/         # Angular application (coming soon)
-├── .cursorrules      # Architecture & coding standards
-├── PROMPTS.md        # Development log
-└── README.md
+├── backend/           # Express API, Prisma schema, Jest integration tests
+├── frontend/          # Angular SPA, Vitest unit tests
+├── .cursorrules       # Engineering standards
+├── REQUIREMENTS.md    # Product requirements
+├── ARCHITECTURE.md    # System design reference
+├── PROMPTS.md         # Development log
+└── package.json       # Root orchestration (concurrent dev)
 ```
 
-## Getting Started
+## Setup
 
-Setup instructions will be added as the backend and frontend scaffolds are created.
+### 1. Install dependencies
 
-## Development Standards
+From the repository root:
 
-All contributors and AI agents must follow the rules defined in [`.cursorrules`](./.cursorrules). Key requirements include strict TypeScript, no `any`, race-safe database patterns, and documentation updates in [`PROMPTS.md`](./PROMPTS.md) after each major task.
+```bash
+npm install
+npm install --prefix backend
+npm install --prefix frontend
+```
+
+### 2. Configure the backend environment
+
+Copy the example env file and adjust if needed:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Default `backend/.env`:
+
+```env
+DATABASE_URL="file:./prisma/dev.db"
+PORT=3000
+CORS_ORIGIN="http://localhost:4200"
+```
+
+### 3. Run database migrations
+
+```bash
+cd backend
+npx prisma migrate dev
+```
+
+This applies all Prisma migrations and creates `backend/prisma/dev.db`.
+
+### 4. Seed sample products
+
+```bash
+npm run db:seed
+```
+
+Seeds five flash-sale SKUs with varied stock levels.
+
+### 5. Start development servers
+
+From the repository root:
+
+```bash
+npm run dev
+```
+
+| Service  | URL |
+|----------|-----|
+| Backend  | http://localhost:3000 |
+| Frontend | http://localhost:4200 |
+
+The root `dev` script uses `concurrently` to run both servers. Open the frontend URL, enter a player name on the login screen, and browse the store.
+
+## Testing
+
+### Backend (Jest integration tests)
+
+```bash
+cd backend
+npm test
+```
+
+Includes the concurrency integration test that fires 10 parallel add-to-cart requests against a single-stock product.
+
+### Frontend (Vitest unit tests)
+
+```bash
+cd frontend
+npm test
+```
+
+Includes `ProductCardComponent` signal reactivity tests under `ChangeDetectionStrategy.OnPush`.
+
+### Run both
+
+```bash
+npm test --prefix backend
+npm test --prefix frontend
+```
+
+## Production Build
+
+```bash
+npm run build --prefix backend
+npm run build --prefix frontend
+```
+
+## API Overview
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/login` | POST | Pseudo-login with `{ "name": "..." }` |
+| `/api/products` | GET | Product catalog |
+| `/api/cart/items` | POST | Add to cart (atomic stock reservation) |
+| `/api/cart/items/:productId` | DELETE | Remove from cart |
+| `/api/orders/checkout` | POST | Checkout pre-reserved cart items |
+
+Authenticated cart and checkout routes require the `x-user-id` header returned from login.
+
+## Documentation
+
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — system design, concurrency model, and scalability notes
+- [`REQUIREMENTS.md`](./REQUIREMENTS.md) — functional requirements
+- [`.cursorrules`](./.cursorrules) — coding standards for contributors and agents
 
 ## License
 

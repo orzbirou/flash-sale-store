@@ -1,12 +1,12 @@
 # Flash-Sale Store — System Architecture
 
-This document describes the production architecture of the Flash-Sale Store: a high-concurrency e-commerce system designed to sell limited inventory during time-bound drops without overselling, layout jitter, or stale UI state.
+This document describes an **MVP architecture focused on correctness, maintainable layers, and local single-node evaluation** for the Flash-Sale Store: a limited-inventory e-commerce system that prevents overselling, surfaces live stock counts, and keeps the UI stable during rapid updates.
 
 ---
 
 ## 1. High-Level Architecture Overview
 
-The repository is a **modern monorepo** with two independently runnable applications orchestrated from the workspace root.
+The repository is a **monorepo** with two independently runnable applications orchestrated from the workspace root.
 
 ```
 flash-sale-store/
@@ -74,10 +74,10 @@ Routes: `/login` (guest) → `/store` (authenticated shell with catalog + cart).
 
 ### Database — Prisma 7 + SQLite + Native Driver
 
-The persistence layer uses **Prisma 7 ORM** with **SQLite** and the **`@prisma/adapter-better-sqlite3`** native driver adapter. This combination was chosen deliberately:
+The persistence layer uses **Prisma 7 ORM** with **SQLite** and the **`@prisma/adapter-better-sqlite3`** native driver adapter. This combination supports:
 
 - **Zero external infrastructure** — reviewers can clone, migrate, seed, and run without Docker, Postgres, or Redis.
-- **Native performance** — `better-sqlite3` provides synchronous, embedded SQLite access through Prisma's driver adapter API.
+- **Native performance** — `better-sqlite3` provides embedded SQLite access through Prisma's driver adapter API.
 - **Typed data access** — generated `@prisma/client` types flow through every service layer.
 
 Prisma client initialization (`backend/src/lib/prisma.ts`):
@@ -98,11 +98,11 @@ Core entities: `User`, `Product`, `CartItem` (with lease timestamp), `Order`, `O
 
 ## 2. Concurrency Control & Race-Condition Protection
 
-Flash-sale traffic creates a classic **lost-update** problem: many users attempt to buy the last unit simultaneously. This system solves it at the **database query level**, not in application memory.
+Flash-sale traffic creates a classic **lost-update** problem: many users attempt to buy the last unit simultaneously. This system addresses it at the **database query level**, not in application memory.
 
 ### Reservation-on-Cart (Not Checkout)
 
-Stock is **reserved and decremented at the exact millisecond an item is added to the cart**, not at checkout. This design:
+Stock is **reserved and decremented when an item is added to the cart**, not at checkout. This design:
 
 - Prevents users from holding phantom availability in their browser while stock is already gone
 - Makes "Add to Cart" the atomic contention point — matching real flash-sale UX expectations
@@ -136,7 +136,7 @@ SET stock = stock - :quantity
 WHERE id = :productId AND stock >= :quantity;
 ```
 
-#### Why this is bulletproof
+#### Why this approach is reliable
 
 | Anti-pattern | Our approach |
 |--------------|--------------|
@@ -160,10 +160,11 @@ The same transaction also upserts the `CartItem` row (with a fresh `expiresAt` l
 
 `CheckoutService.checkout` operates inside a single **`prisma.$transaction`** block:
 
-1. Load the user's cart items (stock already decremented at add-to-cart time)
-2. Compute `totalCents` from cart line quantities × unit prices
-3. Create an `Order` + `OrderItem` records
-4. Delete all cart items for the user
+1. Load only **unexpired** cart items (`expiresAt: { gt: now }`)
+2. Abort with **HTTP 410 Gone** if stale reservations exist but none are valid
+3. Compute `totalCents` from cart line quantities × unit prices
+4. Create `Order` + `OrderItem` records
+5. Delete all cart items for the user
 
 **No second stock decrement occurs at checkout.** The pipeline converts pre-reserved cart inventory into an official order record. If checkout fails mid-transaction, Prisma rolls back the order creation — cart items (and their reservations) remain intact.
 
@@ -196,7 +197,7 @@ Socket.io is attached to the same Node HTTP server (`backend/src/index.ts`) and 
 
 ### Client-Side Visual Stability
 
-Rapid stock updates during a flash drop can cause **layout flicker** — badges resize, prices shift, buttons jump. This frontend applies deliberate stability techniques:
+Rapid stock updates during a flash drop can cause **layout flicker** — badges resize, prices shift, buttons jump. The frontend applies deliberate stability techniques:
 
 | Technique | Implementation |
 |-----------|----------------|
@@ -233,6 +234,19 @@ This models inventory as a **temporary hold** — not a permanent sale until che
 
 This ensures abandoned carts **automatically release inventory** back to the available pool without manual intervention.
 
+### Checkout Expiration Guard
+
+`CheckoutService` loads cart items with an explicit unexpired filter:
+
+```typescript
+where: {
+  userId,
+  expiresAt: { gt: now },
+}
+```
+
+If no valid items remain but stale rows still exist, checkout returns **HTTP 410 Gone** with `"Cart reservation has expired."` This prevents completing an order against expired holds even if the background cleaner has not yet swept them.
+
 ### Client-Side Unified Timer — `CartTimerService`
 
 Rather than spawning a `setInterval` per cart line (which scales poorly and drifts), the frontend uses a **single central tick loop**:
@@ -247,9 +261,9 @@ Display: `CountdownDisplayComponent` formats remaining time as `MM:SS` with urge
 
 ---
 
-## 5. Automated Testing Strategy (Our Proof)
+## 5. Automated Testing Strategy
 
-The system ships with automated tests that verify the two most critical correctness properties: **no overselling under concurrency** and **reactive sold-out UI**.
+The system includes automated tests that verify two critical correctness properties: **no overselling under concurrency** and **reactive sold-out UI**.
 
 ### Backend — Concurrency Integration Test
 
@@ -276,21 +290,31 @@ Tests use `componentRef.setInput('product', …)` to drive signal inputs and `fi
 
 Run: `cd frontend && npm test` (`ng test --watch=false`)
 
-Together, these tests form a **scientific proof layer**: the backend test proves atomic inventory under burst concurrency; the frontend test proves the UI immediately reflects zero stock through Angular Signals.
+Together, these tests provide automated verification: the backend test exercises atomic inventory under burst concurrency; the frontend test confirms the UI reflects zero stock through Angular Signals.
 
 ---
 
 ## 6. Production Scalability Horizon
 
-The current SQLite + in-process architecture is optimized for **correctness, reviewer portability, and rapid development**. For peak global flash-sale volume, the following professional enhancements would be the natural evolution path:
+The current SQLite + in-process architecture is optimized for **correctness, reviewer portability, and rapid local evaluation**. It is not intended as a multi-node production topology. In a real-world multi-node production cluster, the following substitutions would be the natural evolution path.
+
+### Multi-Node Data & Coordination
+
+| MVP component | Production replacement |
+|---------------|------------------------|
+| **SQLite** (single file, single writer) | **PostgreSQL** as the durable system of record for users, orders, and product catalog |
+| **In-process `setInterval` cart cleaner** | **BullMQ** (or similar) as a durable distributed scheduler for lease sweeps and retryable background jobs |
+| **Socket.io `io.emit()` on one Node process** | **Redis Pub/Sub** (or Redis adapter for Socket.io) so stock events fan out across all API instances |
+
+PostgreSQL preserves the same Prisma transaction patterns (`updateMany` with conditional guards, `$transaction` for checkout) while supporting concurrent writers across multiple application nodes.
 
 ### Redis for Hot Inventory & Ephemeral Cart State
 
 | Concern | Enhancement |
 |---------|-------------|
 | **Hot SKU contention** | Move atomic decrement logic to **Redis** using `DECR` or **Lua scripts** that check-and-decrement in a single atomic server-side operation |
-| **Cart leases** | Store cart holds as **Redis keys with TTL** (`SET key value EX 300`) — native expiry replaces polling cleaner intervals |
-| **Cross-region** | Redis Cluster or ElastiCache provides shared state across multiple API instances; SQLite becomes the system-of-record for completed orders only |
+| **Cart leases** | Store cart holds as **Redis keys with TTL** (`SET key value EX 300`) — native expiry reduces reliance on polling cleaners |
+| **Cross-region** | Redis Cluster or ElastiCache provides shared state across API instances; PostgreSQL remains authoritative for completed orders |
 
 The existing `updateMany` + conditional guard pattern maps directly to Redis Lua:
 
@@ -303,6 +327,8 @@ else
 end
 ```
 
+Distributed state coordination via **Redis Pub/Sub** would replace direct in-memory Socket.io broadcasts, allowing any node that mutates inventory to publish a `stock_updated` event consumed by all connected websocket gateways.
+
 ### WebSocket Stream Debouncing
 
 During extreme bursts (thousands of `stock_updated` events per second), broadcasting every individual decrement can overwhelm browser rendering pipelines.
@@ -313,14 +339,14 @@ During extreme bursts (thousands of `stock_updated` events per second), broadcas
 | **Delta throttling** | Suppress broadcasts when stock change is zero or below a visibility threshold |
 | **Room-based fan-out** | Scope Socket.io rooms to active catalog viewers instead of global `io.emit()` |
 
-The frontend's fixed-width badges and `tabular-nums` typography are already designed to absorb rapid updates gracefully — debouncing would reduce unnecessary signal churn at the source.
+The frontend's fixed-width badges and `tabular-nums` typography are designed to absorb rapid updates gracefully — debouncing would reduce unnecessary signal churn at the source.
 
 ### Horizontal API Scaling
 
-- Replace SQLite with **PostgreSQL** (or keep SQLite for dev, Postgres for prod)
 - Run multiple Express instances behind a load balancer
-- Use Redis as the shared coordination layer for stock + cart leases
-- Keep the layered Routes → Controllers → Services architecture unchanged — only the service implementations swap Prisma/SQLite calls for Redis operations
+- Use Redis for shared stock coordination and Pub/Sub event distribution
+- Use BullMQ workers for cart lease expiry independent of the HTTP process lifecycle
+- Keep the layered Routes → Controllers → Services architecture unchanged — only the service implementations swap embedded SQLite/in-process patterns for PostgreSQL, Redis, and queue-backed workers
 
 ---
 
@@ -341,7 +367,7 @@ The frontend's fixed-width badges and `tabular-nums` typography are already desi
 | `/api/products` | GET | Product catalog |
 | `/api/cart/items` | POST | Add to cart (atomic stock reservation) |
 | `/api/cart/items/:productId` | DELETE | Remove from cart (stock restore) |
-| `/api/orders/checkout` | POST | Convert cart → order (no re-decrement) |
+| `/api/orders/checkout` | POST | Convert unexpired cart → order (no re-decrement) |
 
 | Constant | Value | Meaning |
 |----------|-------|---------|
@@ -350,4 +376,4 @@ The frontend's fixed-width badges and `tabular-nums` typography are already desi
 
 ---
 
-*This architecture document reflects the completed implementation as of the final project deliverable. For the step-by-step development history, see [`PROMPTS.md`](./PROMPTS.md). For coding standards enforced during development, see [`.cursorrules`](./.cursorrules).*
+*This architecture document reflects the completed MVP implementation. For the step-by-step development history, see [`PROMPTS.md`](./PROMPTS.md). For coding standards enforced during development, see [`.cursorrules`](./.cursorrules).*

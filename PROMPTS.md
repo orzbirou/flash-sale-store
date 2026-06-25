@@ -378,3 +378,26 @@ Payload: `{ productId, stock }`
 - `ARCHITECTURE.md`
 - `PROMPTS.md` (updated)
 
+---
+
+## Step 8: Checkout Expiration Guard & Documentation Polish
+
+### Prompt
+
+> Add checkout `expiresAt` filter with HTTP 410 on expired reservations; rewrite README.md; tone down ARCHITECTURE.md marketing language; expand production scalability notes (PostgreSQL, BullMQ, Redis Pub/Sub).
+
+### What Was Done
+
+- **Checkout guard:** `checkout.service.ts` loads cart with `expiresAt: { gt: now }`; returns `AppError(410, 'Cart reservation has expired.')` when only stale rows remain.
+- **README.md:** Full rewrite with Node prerequisites, install steps, `.env`, migrate/seed, `npm run dev`, and test commands.
+- **ARCHITECTURE.md:** MVP-focused tone; checkout expiration section; expanded multi-node horizon (PostgreSQL, BullMQ, Redis Pub/Sub).
+- **Build:** Excluded `src/tests` from backend `tsconfig.json` so `npm run build` compiles cleanly.
+
+### Files Created / Updated
+
+- `backend/src/services/checkout.service.ts`
+- `backend/tsconfig.json`
+- `README.md`
+- `ARCHITECTURE.md`
+- `PROMPTS.md` (updated)
+

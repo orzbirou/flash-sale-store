@@ -5,12 +5,23 @@ import type { OrderWithItems } from './cart.service';
 export class CheckoutService {
   async checkout(userId: string): Promise<OrderWithItems> {
     return prisma.$transaction(async (tx) => {
+      const now = new Date();
+
       const cartItems = await tx.cartItem.findMany({
-        where: { userId },
+        where: {
+          userId,
+          expiresAt: { gt: now },
+        },
         include: { product: true },
       });
 
       if (cartItems.length === 0) {
+        const staleCount = await tx.cartItem.count({ where: { userId } });
+
+        if (staleCount > 0) {
+          throw new AppError(410, 'Cart reservation has expired.');
+        }
+
         throw new AppError(400, 'Cart is empty');
       }
 
